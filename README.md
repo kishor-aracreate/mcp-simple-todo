@@ -31,7 +31,7 @@ It supports:
 1. **Clone repo** (or copy files):
 
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/kishor-aracreate/mcp-simple-todo.git
    cd mcp-simple-todo
    ```
 
