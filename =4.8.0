@@ -1,0 +1,2 @@
+Requirement already satisfied: pymongo in e:\kishor-work\arametrics\mcp-simple-todo\env\lib\site-packages (4.15.0)
+Requirement already satisfied: dnspython<3.0.0,>=1.16.0 in e:\kishor-work\arametrics\mcp-simple-todo\env\lib\site-packages (from pymongo) (2.8.0)

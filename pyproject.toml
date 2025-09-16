@@ -1,0 +1,19 @@
+[project]
+name = "todo"
+version = "0.1.0"
+description = "A simple MCP TODO server"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.2.0",
+    "google-generativeai>=0.7.1",
+    "pymongo>=4.8.0"  # Add this
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+todo = "todo:main"
