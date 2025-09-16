@@ -239,7 +239,7 @@ class TodoClient:
 
 async def main():
     client = TodoClient()
-    await client.connect([sys.executable, "simple_todo.py"])
+    await client.connect([sys.executable, "todo.py"])
     await client.repl()
 
 if __name__ == "__main__":
