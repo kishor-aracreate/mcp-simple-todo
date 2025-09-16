@@ -1,44 +1,42 @@
 #!/usr/bin/env python3
 """
-Very simple TODO MCP Server: only add and list tasks
+Very simple TODO MCP Server with MongoDB storage
 """
 import asyncio
 import json
 import sys
-import os
+from datetime import datetime
 import uuid
+from pymongo import MongoClient
 
-# File to store tasks
-TODO_FILE = "tasks.json"
+# ----------------- MongoDB Setup -----------------
+MONGO_URI = "mongodb://localhost:27017"
+DB_NAME = "todo_db"
+COLLECTION = "tasks"
 
-def load_tasks():
-    if os.path.exists(TODO_FILE):
-        try:
-            with open(TODO_FILE, "r") as f:
-                return json.load(f)
-        except:
-            return []
-    return []
+client = MongoClient(MONGO_URI)
+db = client[DB_NAME]
+tasks_col = db[COLLECTION]
 
-def save_tasks(tasks):
-    with open(TODO_FILE, "w") as f:
-        json.dump(tasks, f, indent=2)
-
+# ----------------- Task Functions -----------------
 async def add_task(description: str) -> str:
-    tasks = load_tasks()
     task_id = str(uuid.uuid4())
-    task = {"id": task_id, "description": description}
-    tasks.append(task)
-    save_tasks(tasks)
+    task = {
+        "id": task_id,
+        "description": description,
+        "status": "todo",
+        "created_at": datetime.now().isoformat()
+    }
+    tasks_col.insert_one(task)
     return f"Task added with ID: {task_id}"
 
 async def list_tasks() -> str:
-    tasks = load_tasks()
+    tasks = list(tasks_col.find())
     if not tasks:
         return "No tasks found"
-    return "\n".join([f"{t['id']}: {t['description']}" for t in tasks])
+    return "\n".join([f"{t['id']}: {t['description']} ({t.get('status','todo')})" for t in tasks])
 
-# ----------------- MCP part -----------------
+# ----------------- MCP Server -----------------
 class MCPServer:
     def __init__(self):
         self.tools = {
@@ -51,7 +49,13 @@ class MCPServer:
         msg_id = message.get("id")
 
         if method == "initialize":
-            return {"jsonrpc": "2.0", "id": msg_id, "result": {"serverInfo": {"name": "todo", "version": "1.0"}}}
+            return {
+                "jsonrpc": "2.0",
+                "id": msg_id,
+                "result": {
+                    "serverInfo": {"name": "todo", "version": "1.0"}
+                }
+            }
 
         elif method == "tools/list":
             return {
@@ -67,13 +71,27 @@ class MCPServer:
             args = message["params"].get("arguments", {})
             if name in self.tools:
                 result = await self.tools[name]["function"](**args)
-                return {"jsonrpc": "2.0", "id": msg_id, "result": {"content": [{"type": "text", "text": result}]}}
+                return {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "result": {"content": [{"type": "text", "text": result}]}
+                }
             else:
-                return {"jsonrpc": "2.0", "id": msg_id, "error": {"code": -32601, "message": "Tool not found"}}
+                return {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "error": {"code": -32601, "message": "Tool not found"}
+                }
 
-        return {"jsonrpc": "2.0", "id": msg_id, "error": {"code": -32601, "message": "Unknown method"}}
+        return {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "error": {"code": -32601, "message": "Unknown method"}
+        }
 
     async def run_stdio(self):
+        print("TODO MCP Server with MongoDB starting...", file=sys.stderr)
+        sys.stderr.flush()
         while True:
             line = await asyncio.to_thread(sys.stdin.readline)
             if not line:
