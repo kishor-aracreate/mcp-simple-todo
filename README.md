@@ -162,7 +162,7 @@ mcp-simple-todo/
 │── client.py         # Client with Gemini + REPL
 │── todo.py           # MCP server with MongoDB
 │── requirements.txt  # Python dependencies
-│── README.md         # Documentation
+│── README.md         # Documentation (Readme)
 ```
 
 ---
